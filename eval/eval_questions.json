@@ -1,0 +1,107 @@
+[
+  {
+    "id": "q1",
+    "question": "What is the total revenue across all transactions?",
+    "reference_sql": "SELECT ROUND(SUM(revenue), 2) AS total_revenue FROM sales_transactions",
+    "compare_columns": ["total_revenue"],
+    "numeric_tolerance": 1.0
+  },
+  {
+    "id": "q2",
+    "question": "What were the top 5 products by total revenue?",
+    "reference_sql": "SELECT product, ROUND(SUM(revenue), 2) AS total_revenue FROM sales_transactions GROUP BY product ORDER BY total_revenue DESC LIMIT 5",
+    "compare_columns": ["product"],
+    "numeric_tolerance": 1.0
+  },
+  {
+    "id": "q3",
+    "question": "How many transactions happened in the West region?",
+    "reference_sql": "SELECT COUNT(*) AS txn_count FROM sales_transactions WHERE region = 'West'",
+    "compare_columns": ["txn_count"],
+    "numeric_tolerance": 0
+  },
+  {
+    "id": "q4",
+    "question": "What is the average revenue per transaction by region?",
+    "reference_sql": "SELECT region, ROUND(AVG(revenue), 2) AS avg_revenue FROM sales_transactions GROUP BY region ORDER BY region",
+    "compare_columns": ["region"],
+    "numeric_tolerance": 1.0
+  },
+  {
+    "id": "q5",
+    "question": "Which product had the highest average revenue per order?",
+    "reference_sql": "SELECT product, ROUND(AVG(revenue), 2) AS avg_revenue FROM sales_transactions GROUP BY product ORDER BY avg_revenue DESC LIMIT 1",
+    "compare_columns": ["product"],
+    "numeric_tolerance": 1.0
+  },
+  {
+    "id": "q6",
+    "question": "How many distinct customers made a purchase?",
+    "reference_sql": "SELECT COUNT(DISTINCT customer_email) AS distinct_customers FROM sales_transactions",
+    "compare_columns": ["distinct_customers"],
+    "numeric_tolerance": 0
+  },
+  {
+    "id": "q7",
+    "question": "What is the total quantity sold per product?",
+    "reference_sql": "SELECT product, SUM(quantity) AS total_quantity FROM sales_transactions GROUP BY product ORDER BY total_quantity DESC",
+    "compare_columns": ["product"],
+    "numeric_tolerance": 1.0
+  },
+  {
+    "id": "q8",
+    "question": "How many transactions have a null revenue value?",
+    "reference_sql": "SELECT COUNT(*) AS null_revenue_count FROM sales_transactions WHERE revenue IS NULL",
+    "compare_columns": ["null_revenue_count"],
+    "numeric_tolerance": 0
+  },
+  {
+    "id": "q9",
+    "question": "Which region generated the least total revenue?",
+    "reference_sql": "SELECT region, ROUND(SUM(revenue), 2) AS total_revenue FROM sales_transactions GROUP BY region ORDER BY total_revenue ASC LIMIT 1",
+    "compare_columns": ["region"],
+    "numeric_tolerance": 1.0
+  },
+  {
+    "id": "q10",
+    "question": "What is the maximum single order revenue?",
+    "reference_sql": "SELECT MAX(revenue) AS max_revenue FROM sales_transactions",
+    "compare_columns": ["max_revenue"],
+    "numeric_tolerance": 0.01
+  },
+  {
+    "id": "q11",
+    "question": "How many orders had a quantity greater than 5?",
+    "reference_sql": "SELECT COUNT(*) AS large_orders FROM sales_transactions WHERE quantity > 5",
+    "compare_columns": ["large_orders"],
+    "numeric_tolerance": 0
+  },
+  {
+    "id": "q12",
+    "question": "What is the total revenue by product and region combined, top 5?",
+    "reference_sql": "SELECT product, region, ROUND(SUM(revenue), 2) AS total_revenue FROM sales_transactions GROUP BY product, region ORDER BY total_revenue DESC LIMIT 5",
+    "compare_columns": ["product", "region"],
+    "numeric_tolerance": 1.0
+  },
+  {
+    "id": "q13",
+    "question": "How many total transactions are in the dataset?",
+    "reference_sql": "SELECT COUNT(*) AS total_transactions FROM sales_transactions",
+    "compare_columns": ["total_transactions"],
+    "numeric_tolerance": 0
+  },
+  {
+    "id": "q14",
+    "question": "What is the average quantity ordered per transaction?",
+    "reference_sql": "SELECT ROUND(AVG(quantity), 2) AS avg_quantity FROM sales_transactions",
+    "compare_columns": ["avg_quantity"],
+    "numeric_tolerance": 0.1
+  },
+  {
+    "id": "q15",
+    "question": "Which 3 products were ordered least frequently (by number of transactions)?",
+    "reference_sql": "SELECT product, COUNT(*) AS order_count FROM sales_transactions GROUP BY product ORDER BY order_count ASC LIMIT 3",
+    "compare_columns": ["product"],
+    "numeric_tolerance": 1.0
+  }
+]
