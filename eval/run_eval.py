@@ -10,7 +10,6 @@ For each question in eval_questions.json, we:
      single-value questions we compare within numeric_tolerance.
 
 This doesn't check SQL text similarity (two different queries can be equally
-correct) — it checks whether the agent's query produces the right answer.
 """
 
 import json
@@ -25,10 +24,20 @@ def load_questions(path: str) -> list[dict]:
         return json.load(f)
 
 
-def _values_for_columns(rows: list[dict], columns: list[str]):
-    """Return a comparable, order-independent representation of the rows' values
-    in the given columns."""
-    return sorted(tuple(round(r[c], 2) if isinstance(r[c], float) else r[c] for c in columns) for r in rows)
+def _values_positional(rows: list[dict], n: int):
+    """Return a comparable, order-independent representation of the first n
+    values in each row, taken by POSITION rather than by column name.
+
+    We compare positionally because the agent is free to alias its result
+    columns however it wants (e.g. `COUNT(*) AS west_count` instead of the
+    reference query's `txn_count`) — the column name is an implementation
+    detail, not part of correctness. compare_columns in eval_questions.json
+    just tells us how many leading columns to compare and gives them a
+    human-readable name for the reference query."""
+    return sorted(
+        tuple(round(v, 2) if isinstance(v, float) else v for v in list(r.values())[:n])
+        for r in rows
+    )
 
 
 def score_question(client, spark, q: dict, table_name: str, schema_description: str) -> dict:
@@ -55,12 +64,12 @@ def score_question(client, spark, q: dict, table_name: str, schema_description: 
         result["notes"] = f"Error collecting rows for comparison: {e}"
         return result
 
-    cols = q["compare_columns"]
+    n_cols = len(q["compare_columns"])
     tolerance = q.get("numeric_tolerance", 0)
 
     try:
-        ref_values = _values_for_columns(reference_rows, cols)
-        agent_values = _values_for_columns(agent_rows, cols)
+        ref_values = _values_positional(reference_rows, n_cols)
+        agent_values = _values_positional(agent_rows, n_cols)
 
         if tolerance and all(isinstance(v, (int, float)) for row in ref_values for v in row):
             # Numeric comparison within tolerance, position-matched after sorting.

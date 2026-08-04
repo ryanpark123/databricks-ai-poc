@@ -6,12 +6,16 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install anthropic
+# MAGIC %pip install --upgrade anthropic typing_extensions
+
+# COMMAND ----------
+
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
 import sys
-sys.path.append("/Workspace/Repos/<your-repo-path>/databricks-ai-poc/src")  # adjust to your repo path
+sys.path.append("/Workspace/Users/parkryan844@gmail.com/databricks-ai-poc/src")  # adjust to your repo path
 
 from claude_client import get_client
 from nl_to_sql_agent import get_schema_description, generate_sql_with_retry, explain_results

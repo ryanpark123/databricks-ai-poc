@@ -6,12 +6,16 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install anthropic
+# MAGIC %pip install --upgrade anthropic typing_extensions
+
+# COMMAND ----------
+
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
 import sys
-sys.path.append("/Workspace/Repos/<your-repo-path>/databricks-ai-poc/src")  # adjust to your repo path
+sys.path.append("/Workspace/Users/parkryan844@gmail.com/databricks-ai-poc/src")  # adjust to your repo path
 # Simpler alternative if you're not using Repos: paste the contents of src/*.py
 # directly into cells here, or use %run on notebook versions of those files.
 
@@ -52,11 +56,11 @@ print(json.dumps(current_profile, indent=2, default=str))
 
 drift = None
 try:
-    with open(BASELINE_PATH.replace("/tmp/", "/dbfs/tmp/"), "r") as f:
-        baseline_profile = json.load(f)
+    baseline_row = spark.table("claude_poc_baseline").collect()[0]
+    baseline_profile = json.loads(baseline_row["profile_json"])
     drift = diff_profiles(current_profile, baseline_profile)
     print("Drift vs baseline:", json.dumps(drift, indent=2))
-except FileNotFoundError:
+except Exception:
     print("No baseline found yet — this run will become the baseline.")
 
 report = generate_report(client, TABLE_NAME, current_profile, drift)
@@ -69,8 +73,6 @@ print(report)
 
 # COMMAND ----------
 
-dbutils.fs.mkdirs("/tmp/claude_poc")
-with open(BASELINE_PATH.replace("/tmp/", "/dbfs/tmp/"), "w") as f:
-    json.dump(current_profile, f, default=str)
-
+baseline_df = spark.createDataFrame([{"profile_json": json.dumps(current_profile, default=str)}])
+baseline_df.write.mode("overwrite").saveAsTable("claude_poc_baseline")
 print("Baseline updated.")
