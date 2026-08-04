@@ -4,6 +4,54 @@ Two proof-of-concept agents built for Databricks, using Claude to add a natural-
 reasoning layer on top of PySpark/Spark SQL. Built as portfolio pieces to demonstrate
 PM + technical range with Databricks and AI agent tooling.
 
+
+### AI-generated data quality report
+Real profiling stats fed into Claude, returned as a prioritized, actionable report:
+
+![Data quality report]
+**📊 Data Quality Report: `sales_transactions`**
+**Severity: Medium**
+
+---
+
+**Key Findings:**
+
+1. **🟡 Revenue nulls (3.1%)** — 155 of 5,000 rows are missing `revenue` values. These transactions are silently excluded from any SUM/AVG aggregations, meaning current revenue totals are likely understated. Needs immediate triage to determine if this is a pipeline gap or legitimate (e.g., comped orders).
+
+2. **🟡 Low customer-to-transaction ratio** — 798 distinct `customer_email` values across 5,000 rows means an average of ~6.3 transactions per customer. Worth confirming this is expected behavior and not the result of email deduplication failures or shared accounts inflating repeat-purchase metrics.
+
+3. **🟡 Sparse date coverage** — Only 211 distinct `order_date` values across 5,000 rows. Depending on the expected date range, this could indicate missing data for certain periods or suspicious clustering. Confirm whether all expected business days are represented.
+
+4. **🟢 transaction_id looks clean** — 5,000 rows, 5,000 distinct IDs, min=0/max=4999 with no nulls. Sequential and complete. No issues.
+
+---
+
+**Recommended Next Steps:**
+
+1. **Investigate the 155 null `revenue` rows** — Pull them by `product`, `region`, and `order_date` to identify if the nulls are concentrated (e.g., one product, one date range), which would point to a specific upstream ingestion failure.
+
+2. **Audit `order_date` distribution** — Run a daily/weekly transaction count and flag any gaps. If the dataset is supposed to cover a continuous period, missing dates could indicate dropped data.
+
+3. **Add a `revenue` not-null check and a min > 0 check to your pipeline contract** — Given `revenue` is a core business metric, this should be a blocking quality gate, not a silent miss.
+
+### Natural language to SQL
+"What were the top 5 products by total revenue?" → correct SQL on the first attempt:
+
+![NL to SQL]
+<img width="1456" height="813" alt="image" src="https://github.com/user-attachments/assets/3e3cc83e-304d-4630-a804-84f379a4537f" />
+<img width="469" height="264" alt="Screenshot 2026-08-03 at 9 09 24 PM" src="https://github.com/user-attachments/assets/b72fd492-ee00-4654-8fcd-f96632d314e9" />
+<img width="1536" height="728" alt="image" src="https://github.com/user-attachments/assets/64f82c41-40d1-42c6-8b6e-b38be1f30985" />
+
+
+### Eval harness results
+15/15 questions answered correctly against ground-truth SQL — includes a fixed
+bug in the comparison logic (see commit history) where the harness initially
+compared by column name rather than position, undercounting accuracy at 73%.
+
+![Eval results]
+<img width="780" height="447" alt="Screenshot 2026-08-03 at 9 10 09 PM" src="https://github.com/user-attachments/assets/3016c18c-6dbf-4127-b9f5-a66b2539d976" />
+
+
 ## Projects
 
 ### 1. AI-Powered Data Quality Agent (`notebooks/01_data_quality_agent.py`)
